@@ -57,8 +57,12 @@ WSGI_APPLICATION = 'iqfight.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': "iqfight",
+        'USER': 'iqfight',                      # Not used with sqlite3.
+        'PASSWORD': 'iqfight',                  # Not used with sqlite3.
+        'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
+        'PORT': '', 
     }
 }
 
@@ -80,3 +84,5 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.6/howto/static-files/
 
 STATIC_URL = '/static/'
+
+AUTH_PROFILE_MODULE = 'iqfight_app.UserProfile'
