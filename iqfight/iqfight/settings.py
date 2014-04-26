@@ -9,8 +9,20 @@ https://docs.djangoproject.com/en/1.6/ref/settings/
 """
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-import os
+import os,sys
+
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+PARENT_PATH = os.path.dirname(BASE_DIR)
+sys.path.append(BASE_DIR)
+sys.path.append(PARENT_PATH)
+sys.path.append(os.path.join(BASE_DIR,"iqfight_app"))
+LOG_DIR = os.path.join(BASE_DIR,"log")
+try:
+    os.mkdir(LOG_DIR)
+except:
+    pass
+LOG_FILE = os.path.join(LOG_DIR,'log.txt')
+
 
 
 # Quick-start development settings - unsuitable for production
@@ -36,6 +48,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'iqfight_app'
 )
 
 MIDDLEWARE_CLASSES = (
@@ -63,6 +76,7 @@ DATABASES = {
         'PASSWORD': 'iqfight',                  # Not used with sqlite3.
         'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
         'PORT': '', 
+        'ATOMIC_REQUESTS':True
     }
 }
 
@@ -85,4 +99,39 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-AUTH_PROFILE_MODULE = 'iqfight_app.UserProfile'
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'console': {'format':'[%(levelname)s] %(asctime)s %(module)s: %(message)s'},
+        'verbose': {
+            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+        },
+        'simple': {
+            'format': '%(levelname)s %(message)s'
+        },
+    },
+    'handlers': {
+        'views':{
+            'level':'DEBUG',
+            'class':'logging.handlers.RotatingFileHandler',
+            'filename': LOG_FILE,
+            'formatter': 'verbose',
+            'maxBytes': 1048576,
+            'backupCount': 3,
+            }
+    },
+    'loggers': {
+        'django.request': {
+            'handlers': ['views'],
+            'level': 'ERROR',
+            'propagate': True,
+        },
+        'iqfight_app.views':{
+            'handlers': ['views'],
+            'level': 'DEBUG',
+            'propagate': True
+            },
+    }
+}

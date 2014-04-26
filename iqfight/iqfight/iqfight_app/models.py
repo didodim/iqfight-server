@@ -10,7 +10,7 @@ class GameConstants(models.Model):
 class Question(models.Model):
     question    = models.TextField(default="")
     explanation = models.TextField(default="")
-    picture     = models.FilePathField()
+    picture     = models.ImageField()
     source      = models.CharField(max_length=200,default='')
     
 class Answer(models.Model):
@@ -18,37 +18,68 @@ class Answer(models.Model):
     order       = models.SmallIntegerField(default=0)
     answer      = models.CharField(max_length=200)
     is_correct  = models.BooleanField(default=False)
-    question    = models.ForeignKey(Question)
+    question    = models.ForeignKey(Question,related_name='answers')
     
 class Game(models.Model):
     name        = models.CharField(max_length=50)
     is_active   = models.BooleanField(default=True)
-    date_time   = models.DateField()
+    question_started   = models.DateField(null=True)
+    created     = models.DateField()
     questions    = models.CommaSeparatedIntegerField(max_length=255)
     current_question = models.IntegerField(default=0)
-    last_answered   = models.ForeignKey("Player",null=True)
+    answered   = models.ForeignKey("Player",null=True)
     num_of_players  = models.IntegerField(default=0)
+    max_num_of_players = models.IntegerField(default=3)
     def save(self,*args,**kwargs):
         if not self.questions:
             constants = GameConstants.objects.all()[0]
             lst = Question.objects.order_by('?').values_list("pk",flat=True)[:constants.questions_in_game]
             self.questions = str(lst)[1:-1]
-        if not self.date_time:
-            self.date_time = datetime.datetime.now()
+        if not self.created:
+            self.created = datetime.datetime.now()
+        if not self.question_started:
+            self.question_started = datetime.datetime.now() + datetime.timedelta(milliseconds=500)
         super(self.__class__,self).save(*args,**kwargs)
+    def get_current_question(self):
+        ids = self.get_questions()
+        if len(ids) >= self.current_question:
+            question =  None
+        else:
+            question =Question.objects.select_related('answers').get(pk=ids[self.current_question]) 
+        return question
+    
+    def get_questions(self):
+        return self.questions.split(',')
+    
+    def next_question(self,answered_player=None):
+        ids = self.get_questions()
+        self.current_question += 1
+        self.answered = answered_player
+        if len(ids) >= self.current_question:
+            question =  None
+            self.is_active = False
+        else:
+            question = Question.objects.select_related('answers').get(pk=ids[self.current_question])
+        self.question_started = datetime.datetime.now() + datetime.timedelta(milliseconds=500)
+        self.save()
+        return question
 
         
 class Player(models.Model):
     user    = models.ForeignKey(User)
     points  = models.IntegerField(default=0)
-    current_game = models.ForeignKey(Game,null=True)
     
 class PlayerGames(models.Model):
     player  = models.ForeignKey(Player,related_name="games")
     game    = models.ForeignKey(Game,related_name="players")
     points  = models.IntegerField(default=0)
+    is_current = models.BooleanField(default=True)
     started = models.DateField()
     ended   = models.DateField(null=True)
-    
+    def save(self,*args,**kwargs):
+        if not self.started:
+            self.started = datetime.datetime.now()
+        super(self.__class__,self).save(*args,**kwargs)
+
         
     
