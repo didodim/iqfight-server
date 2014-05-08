@@ -12,10 +12,9 @@ https://docs.djangoproject.com/en/1.6/ref/settings/
 import os,sys
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
-PARENT_PATH = os.path.dirname(BASE_DIR)
 sys.path.append(BASE_DIR)
-sys.path.append(PARENT_PATH)
-sys.path.append(os.path.join(BASE_DIR,"iqfight_app"))
+sys.path.append(os.path.join(BASE_DIR,"iqfight"))
+sys.path.append(os.path.join(BASE_DIR,"iqfight","iqfight_app"))
 LOG_DIR = os.path.join(BASE_DIR,"log")
 try:
     os.mkdir(LOG_DIR)
@@ -48,7 +47,8 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'iqfight_app'
+    'iqfight_app',
+    'south'
 )
 
 MIDDLEWARE_CLASSES = (

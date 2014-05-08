@@ -5,12 +5,13 @@ import datetime, random
 class GameConstants(models.Model):
     questions_in_game   = models.IntegerField(default=10)
     time_for_answer     = models.IntegerField(default=60*1000)
-    refresh_interval    = models.IntegerField(default=1*1000)
+    refresh_interval_game    = models.IntegerField(default=1*1000)
+    refresh_interval_play    = models.IntegerField(default=1*1000)
     
 class Question(models.Model):
     question    = models.TextField(default="")
     explanation = models.TextField(default="")
-    picture     = models.ImageField()
+    picture     = models.ImageField(upload_to='pictures')
     source      = models.CharField(max_length=200,default='')
     
 class Answer(models.Model):
@@ -30,6 +31,9 @@ class Game(models.Model):
     answered   = models.ForeignKey("Player",null=True)
     num_of_players  = models.IntegerField(default=0)
     max_num_of_players = models.IntegerField(default=3)
+    @property
+    def players_to_start(self):
+        return self.max_num_of_players - self.num_of_players
     def save(self,*args,**kwargs):
         if not self.questions:
             constants = GameConstants.objects.all()[0]
