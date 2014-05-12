@@ -24,13 +24,15 @@ class Answer(models.Model):
 class Game(models.Model):
     name        = models.CharField(max_length=50)
     is_active   = models.BooleanField(default=True)
-    question_started   = models.DateField(null=True)
-    created     = models.DateField()
+    question_started   = models.DateTimeField(null=True)
+    created     = models.DateTimeField()
     questions    = models.CommaSeparatedIntegerField(max_length=255)
     current_question = models.IntegerField(default=0)
     answered   = models.ForeignKey("Player",null=True)
     num_of_players  = models.IntegerField(default=0)
     max_num_of_players = models.IntegerField(default=3)
+    def __unicode__(self):
+        return self.name
     @property
     def players_to_start(self):
         return self.max_num_of_players - self.num_of_players
@@ -41,8 +43,6 @@ class Game(models.Model):
             self.questions = str(lst)[1:-1]
         if not self.created:
             self.created = datetime.datetime.now()
-        if not self.question_started:
-            self.question_started = datetime.datetime.now() + datetime.timedelta(milliseconds=500)
         super(self.__class__,self).save(*args,**kwargs)
     def get_current_question(self):
         ids = self.get_questions()

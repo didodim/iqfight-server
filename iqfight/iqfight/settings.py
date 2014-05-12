@@ -10,6 +10,7 @@ https://docs.djangoproject.com/en/1.6/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os,sys
+from inspect import trace
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 sys.path.append(BASE_DIR)
@@ -54,7 +55,7 @@ INSTALLED_APPS = (
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+#    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -128,10 +129,16 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': True,
         },
-        'iqfight_app.views':{
+        'iqfight.iqfight_app.views':{
             'handlers': ['views'],
             'level': 'DEBUG',
             'propagate': True
             },
     }
 }
+import traceback
+from django.utils import log
+try:
+    log.dictConfig(LOGGING)
+except:
+    print traceback.format_exc()
