@@ -18,7 +18,7 @@ ERROR 2014-05-12 17:00:07,369 views 6440 5216 Traceback (most recent call last):
     if passowrd1 != password:
 NameError: global name 'passowrd1' is not defined
 
-ERROR 2014-05-12 17:06:50,595 views 6168 11076 Traceback (most recent call last):
+ERROR 2014-05-12 17:06:50,595 views 6168 11076 Traceback (most recent call last):  
   File "D:\work\iqfight\iqfight\iqfight\iqfight_app\views.py", line 112, in open_game
     pg,created = PlayerGames.objects.get_or_create(player=player,game=game,is_active=True)
   File "C:\Python27\lib\site-packages\django\db\models\manager.py", line 154, in get_or_create
