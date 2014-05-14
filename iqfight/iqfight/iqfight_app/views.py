@@ -35,9 +35,9 @@ def is_logged(request):
 
 def login_func(request):
     try:
-        data = request.POST
-        if request.method == 'GET':
-            return is_logged(request)
+        data = request.GET
+#        if request.method == 'GET':
+#            return is_logged(request)
         user = authenticate(username=data['username'], password=data['password'])
         login(request, user)
         if user:
@@ -147,47 +147,70 @@ def refresh_game(request):
 
 @login_required(login_url='/login')
 def play(request):
-    user = request.user
-    pg = PlayerGames.objects.select_related('game','player').get(player__user=user,is_active=True)
-    const = GameConstants.objects.all()[0]
-    res = {'refresh_interval':const.refresh_interval, 'question':'',
-           'answers':[],'users':[],'remaing_time':-1, 
-           'answered_user':'','status':'ok',
-           'error_message':''
-           }
-    pgs = PlayerGames.objects.select_related('game','player').filter(game=game,is_active=True)
-    answered_user = ''
-    if pg.game.answered:
-        question = pg.game.get_current_question()
-        answered_user = pg.game.answered.user.username
-    elif datetime.datetime.now() - pg.game.question_started < datetime.timedelta(milliseconds=500):
-        question = pg.game.next_question()
-        anwered_user = 'Nobody'
-    res['answered_user'] = answered_user
-    if not question:
-        pgs.update(is_active=True)
-        if not pg.game.is_active:
-            pg.game.is_active = True
-            pg.game.save()
+    try:
+        user = request.user
+        pg = PlayerGames.objects.select_related('game','player').get(player__user=user,is_current=True)
+        game = pg.game
+        res = {'status':'ok','error_message':''}
+        const = GameConstants.objects.all()[0]
+        delta = datetime.datetime.now() - game.question_started + datetime.timedelta(milliseconds=200)
+        ms = delta.days*24*60*60*1000 + delta.seconds*1000 + delta.microseconds/1000
+        res['remaing_time'] = const.time_for_answer - ms
+        if res['remaing_time'] <= 0:
+            answered_user = 'Nobody'
+            res['remaing_time'] = 0
+        answered_user = ''
+        question = None
+        if game.answered:
+            answered_user = game.answered.user.username
+            question = game.next_question()
+        elif res['remaing_time'] <= 0:
+            question = game.next_question()
+            answered_user = 'NOBODY'
+        else:
+            question = game.get_current_question()
+        res['refresh_interval'] = const.time_for_answer
+        if question:
+            res['question'] = {'question': question.question, 
+                               'explanation':question.explanation, 
+                               'picture': '', 
+                               'source': question.source}
+            if question.picture:
+                res['question']['picture'] = question.picture.url
+            
+            res['answers'] = []
+            for el in question.answers.all().order_by('order'):
+                temp = {'answer':el.answer,'id':el.pk,'picture':''}
+                if el.picture:
+                    temp['picture'] = el.picture.url
+                res['answers'] += [temp]
+                
+        else:
+            res['question'] = {}
+            res['answers'] = []
+        players = []
+        pgs = PlayerGames.objects.select_related().filter(game=game,is_current=True)
+        for el in pgs.exclude(pk=pg.pk):
+            players += [{"name": el.player.user.username,"points":el.points}]
+        res['users'] = players
+        res['answered_user'] = answered_user
         return get_response(request,res)
-    player_names = []
-    for el in pgs.exclude(pk=pg.pk):
-        player_names += [el.player.user.username]
-        
-    res['question'] = {'question': question.question, 'explanation':question.explanation, 'picture': question.picture, 'source': question.source}
-    res['answers'] = question.answers.all().order_by('order').values('id','type','answer')
-    res['users'] = player_names
-    delta = datetime.datetime.now() - pg.game.question_started - datetime.timedelta(milliseconds=200)
-    ms = delta.days*24*60*60*1000 + delta.seconds*1000 + delta.microseconds/1000
-    res['remaing_time'] = const.time_for_answer - ms
-    res['answered_user'] = anwered_user
-    return get_response(request,res)
+    except:
+        logger.error(traceback.format_exc())
+        return get_response(request,
+                            {'status':'error','error_message':'Server Error','users':[],'remaing_time':-1,'answered_user':'','answers':[],
+                             'question':'','refresh_interval':1000}
+                            )
     
 def new_game(request):
-    data = request.GET
-    game = Game(name=data['name'])
-    game.save()
-    return get_response(request,{'game':game.name})
+    try:
+        data = request.POST
+        game = Game(name=data['name'])
+        game.save()
+        return get_response(request,{'name':game.name,"id":game.pk,"status":'ok','error_message':''})
+    except:
+        logger.error(traceback.format_exc())
+        return get_response(request,{'name':'',"id":"","status":'error','error_message':'Server Error'})
     
 answer_response = {
                     'refresh_interval':1000,'correct':True,'already_answered':False
