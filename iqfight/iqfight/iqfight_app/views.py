@@ -236,6 +236,7 @@ def answer(request):
                 res['answered_user'] = user.username
                 game.answered = pg.player
                 game.save()
+                pg.got_points(1)
         return get_response(request,res)
     except PlayerGames.DoesNotExists:
         logger.error(traceback.format_exc())

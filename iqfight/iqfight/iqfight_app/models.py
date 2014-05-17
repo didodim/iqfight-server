@@ -87,6 +87,11 @@ class PlayerGames(models.Model):
         if not self.started:
             self.started = datetime.datetime.now()
         super(self.__class__,self).save(*args,**kwargs)
+    def got_points(self,points):
+        self.points += points
+        self.save()
+        self.player.points += points
+        self.player.save()
 
         
     
