@@ -32,6 +32,7 @@ class Game(models.Model):
     answered    = models.ForeignKey("Player",null=True)
     num_of_players  = models.IntegerField(default=0)
     max_num_of_players = models.IntegerField(default=3)
+    players_seen_answered = models.SmallIntegerField(default=0)
     def __unicode__(self):
         return self.name
     @property
@@ -81,6 +82,7 @@ class PlayerGames(models.Model):
     is_current = models.BooleanField(default=True)
     started = models.DateField()
     ended   = models.DateField(null=True)
+    seen_answered = models.BooleanField(default=False)
     def save(self,*args,**kwargs):
         if not self.started:
             self.started = datetime.datetime.now()

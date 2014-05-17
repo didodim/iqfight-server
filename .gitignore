@@ -1,2 +1,4 @@
 *.pyc
 iqfight/log/*
+iqfight/iqfight/iqfight_app/migrations/*
+iqfight/.settings/*
