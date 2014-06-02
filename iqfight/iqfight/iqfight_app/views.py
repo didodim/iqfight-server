@@ -256,7 +256,10 @@ def answer(request):
                             )
 def new_game(request):
     try:
-        data = request.GET
+        if request.method == 'GET':
+            data = request.GET
+        else:
+            data = request.POST
         game = Game(name=data['name'])
         game.save()
         return get_response(request,{'name':game.name,"id":game.pk,"status":'ok','error_message':''})
