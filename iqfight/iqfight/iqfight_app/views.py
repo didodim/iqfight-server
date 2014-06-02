@@ -35,7 +35,10 @@ def is_logged(request):
 
 def login_func(request):
     try:
-        data = request.GET
+        if request.method == 'GET':
+            data = request.GET
+        else:
+            data = request.POST
 #        if request.method == 'GET':
 #            return is_logged(request)
         user = authenticate(username=data['username'], password=data['password'])
@@ -58,7 +61,10 @@ def login_func(request):
                                          })
 def register(request):
     try:
-        data = request.POST
+        if request.method == 'GET':
+            data = request.GET
+        else:
+            data = request.POST
         username=data['username'] 
         password=data['password']
         password1 = data['password1']
