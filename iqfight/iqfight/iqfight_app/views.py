@@ -42,8 +42,9 @@ def login_func(request):
 #        if request.method == 'GET':
 #            return is_logged(request)
         user = authenticate(username=data['username'], password=data['password'])
-        login(request, user)
+        
         if user:
+            login(request, user)
             return get_response(request,{"status":"ok",
                                          "error_message":'',
                                          'username':user.username,
@@ -55,6 +56,7 @@ def login_func(request):
                                          })
     except:
         logger.error(traceback.format_exc())
+        print traceback.format_exc()
         return get_response(request,{"status":"error",
                                          "error_message":'Server Error',
                                          'username':"",
