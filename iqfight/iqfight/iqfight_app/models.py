@@ -33,6 +33,15 @@ class Game(models.Model):
     num_of_players  = models.IntegerField(default=0)
     max_num_of_players = models.IntegerField(default=3)
     players_seen_answered = models.SmallIntegerField(default=0)
+    def init(self,save=False):
+        self.is_active = True
+        self.question_started = None
+        self.current_question = 0
+        self.answered = None
+        self.num_of_players = 0
+        self.players_seen_answered = 0
+        if save:
+            self.save()
     def __unicode__(self):
         return self.name
     @property

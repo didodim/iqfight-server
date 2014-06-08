@@ -113,14 +113,19 @@ def open_game(request):
     try:  
         id = request.GET['id']
         game = Game.objects.get(pk=id)
+        
         if game.players_to_start < 1:
             return get_response(request,{'players_to_start': -1, 'status':'error','error_message':'The game is full'})
         user = request.user
         player  = Player.objects.get(user=user)
+        if PlayerGames.objects.filter(player=player,is_current=True).exclude(game=game):
+            return get_response(request, {'players_to_start': -1,
+                                  'status':'error','error_message':'You are playing another game!!!'})
         pg,created = PlayerGames.objects.get_or_create(player=player,game=game,is_current=True)
         if created:
             game.num_of_players += 1
             game.save()
+        
         return get_response(request, {'players_to_start': game.max_num_of_players - game.num_of_players,
                                   'status':'ok','error_message':''})
     except:
@@ -269,7 +274,26 @@ def new_game(request):
         logger.error(traceback.format_exc())
         return get_response(request,{'name':'',"id":"","status":'error','error_message':'Server Error'})
     
-answer_response = {
-                    'refresh_interval':1000,'correct':True,'already_answered':False
-                   }
+def quit(request):
+    try:
+        pgs = PlayerGames.objects.select_related('player','game').filter(player__user=request.user)
+        pgs.update(is_current=False)
+        for el in pgs:
+            if el.game.players_to_start == 0:
+                n = el.game.num_of_players
+                el.game.init()
+                el.game.num_of_players = n-1
+                el.game.save()
+            else:
+                if el.game.num_of_players > 1:
+                    el.game.num_of_players -= 1
+                    el.game.save()
+                else:
+                    el.game.delete()
+        return get_response(request,{'status':'ok','error_message':''}) 
+    except:
+        logger.error(traceback.format_exc())
+        return get_response(request,{'status':'error','error_message':'Server Error'})
 
+            
+    
