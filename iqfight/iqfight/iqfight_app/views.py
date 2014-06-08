@@ -21,6 +21,14 @@ def get_games_list():
     for el in games:
         lst += [{'id':el.pk,'name':el.name,'players_to_start':el.players_to_start}]
     return lst
+
+def logout_custom(request):
+    try:
+        logout(request)
+        return get_response(request, {"status":"ok","error_message":''})
+    except:
+        logger.error(traceback.format_exc())
+        return get_response(request,{'status':'error','error_message':'Server Error'})
     
 def is_logged(request):
     try:
@@ -29,6 +37,7 @@ def is_logged(request):
         else:
             return get_response(request,{'username':request.user.username,'status':'ok','error_message':''})
     except:
+        logger.error(traceback.format_exc())
         return get_response(request,
                             {'username':'','status':'error',"error_message":'Server Error'}
                             )
