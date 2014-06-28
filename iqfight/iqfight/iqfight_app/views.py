@@ -134,6 +134,8 @@ def open_game(request):
         if created:
             game.num_of_players += 1
             game.save()
+            pg.player.played_games += 1
+            pg.player.save()
         
         return get_response(request, {'players_to_start': game.max_num_of_players - game.num_of_players,
                                   'status':'ok','error_message':''})
@@ -309,16 +311,33 @@ def quit(request):
 
 @login_required(login_url='/login')            
 def statistics(request):
-    data = request.GET
-    limit = data['limit']
-    offset = data['offset']
-    if data.has_key('game'):
-        return statistics_game(limit,offset,data['game'])
-    else:
-        return statistics_all(limit,offset)
+    try:
+        data = request.GET
+        limit = data['limit']
+        offset = data['offset']
+        if data.has_key('game'):
+            return statistics_game(limit,offset,data['game'])
+        else:
+            return statistics_all(limit,offset)
+    except:
+        logger.error(traceback.format_exc())
+        return get_response(request,{'status':'error','error_message':'Server Error'})
     
 def statistics_all(limit,offset):
     players = Player.objects.select_related().order_by('-points')[offset:offset+limit] 
+    res = {'status':'ok','error_message':'','users':[]}
+    lst = []
+    for el in players:
+        lst += [{'usernam':el.user.username,'scores':el.points,'wins':el.wins,'played_games':el.played_games}]
+    res['users'] = lst
+    return get_response(request,res)
     
-    
+def statistics_game(limit,offset,game_id):
+    players = PlayerGames.objects.select_related().filter(game__pk=game_id).order_by('-points')[offset:offset+limit] 
+    res = {'status':'ok','error_message':'','users':[]}
+    lst = []
+    for el in players:
+        lst += [{'usernam':el.player.user.username,'scores':el.points}]
+    res['users'] = lst
+    return get_response(request,res) 
     

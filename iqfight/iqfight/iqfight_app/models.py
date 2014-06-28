@@ -21,7 +21,9 @@ class Question(models.Model):
             except ValueError:
                 return ''
         return ''
-    
+    def __unicode__(self):
+        return unicode(self.pk)
+     
 class Answer(models.Model):
     type        = models.CharField(max_length=20)
     order       = models.SmallIntegerField(default=0)
@@ -37,7 +39,8 @@ class Answer(models.Model):
             except ValueError:
                 return ''
         return ''
-    
+    def __unicode__(self):
+        return unicode(self.question)+u" order "+unicode(self.order)
 class Game(models.Model):
     name        = models.CharField(max_length=50)
     is_active   = models.BooleanField(default=True)
@@ -51,7 +54,7 @@ class Game(models.Model):
     players_seen_answered = models.SmallIntegerField(default=0)
     winner = models.ForeignKey("Player",null=True,related_name="game_wins")
     def set_winner(self,pg=None,save=True):
-        if not pgs:
+        if not pg:
             pg = self.players.select_related().all().order_by("-points")[0]
         self.winner = pg.player
         pg.player.wins += 1
@@ -110,6 +113,9 @@ class Player(models.Model):
     user    = models.ForeignKey(User)
     points  = models.IntegerField(default=0)
     wins    = models.IntegerField(default=0)
+    played_games = models.IntegerField(default=0)
+    def __unicode__(self):
+        return unicode(self.user) 
     
 class PlayerGames(models.Model):
     player  = models.ForeignKey(Player,related_name="games")
@@ -135,7 +141,9 @@ class PlayerGames(models.Model):
             self.save()
     def is_blocked(self):
         return self.block_question and self.game.current_question and self.block_question == self.game.current_question
-        
+    
+    def __unicode__(self):
+        return unicode(self.player) +u' played '+ unicode(self.game) 
 
         
     

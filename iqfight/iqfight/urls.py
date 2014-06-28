@@ -21,6 +21,7 @@ urlpatterns = patterns('',
     url(r'^answer/*',answer),
     url(r'^quit/*',quit),
     url(r'^logout/*',logout_custom),
+    url(r'^statistics/*',statistics),
     url(r'^admin/', include(admin.site.urls)),
     
 )+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
