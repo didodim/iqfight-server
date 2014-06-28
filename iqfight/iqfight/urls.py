@@ -21,7 +21,7 @@ urlpatterns = patterns('',
     url(r'^answer/*',answer),
     url(r'^quit/*',quit),
     url(r'^logout/*',logout_custom),
-    url(r'^login-fail/*',login_failm),
+    url(r'^login-fail/*',login_fail),
     url(r'^statistics/*',statistics),
     url(r'^admin/', include(admin.site.urls)),
     
