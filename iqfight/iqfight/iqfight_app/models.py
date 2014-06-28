@@ -49,12 +49,16 @@ class Game(models.Model):
     num_of_players  = models.IntegerField(default=0)
     max_num_of_players = models.IntegerField(default=3)
     players_seen_answered = models.SmallIntegerField(default=0)
-    winner = models.ForeignKey("Player",null=True)
+    winner = models.ForeignKey("Player",null=True,related_name="game_wins")
     def set_winner(self,pg=None,save=True):
         if not pgs:
             pg = self.players.select_related().all().order_by("-points")[0]
         self.winner = pg.player
-        
+        pg.player.wins += 1
+        pg.player.save()
+        if save:
+            self.save()
+            
     def init(self,save=False):
         self.is_active = True
         self.question_started = None
@@ -105,6 +109,7 @@ class Game(models.Model):
 class Player(models.Model):
     user    = models.ForeignKey(User)
     points  = models.IntegerField(default=0)
+    wins    = models.IntegerField(default=0)
     
 class PlayerGames(models.Model):
     player  = models.ForeignKey(Player,related_name="games")
