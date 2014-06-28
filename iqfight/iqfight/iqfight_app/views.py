@@ -171,7 +171,7 @@ def refresh_game(request):
 def play(request):
     try:
         user = request.user
-        pg = PlayerGames.objects.select_related('game','player').get(player__user=user,is_current=True)
+        pg = PlayerGames.objects.select_related('game','player').get(player__user__pk=user.pk,is_current=True)
         game = pg.game
         pgs = PlayerGames.objects.select_related().filter(game=game,is_current=True)
         res = {'is_blocked':pg.is_blocked(),'status':'ok','error_message':'','game_over':False}
@@ -244,7 +244,7 @@ def answer(request):
     try:
         data = request.GET
         user = request.user
-        pg = PlayerGames.objects.select_related('game','player').get(player__user=user,is_current=True)
+        pg = PlayerGames.objects.select_related('game','player').get(player__user__pk=user.pk,is_current=True)
         game = pg.game
         res = {'status':'ok','error_message':'','correct':False,'already_answered':False,'answered_user':''}
         if pg.is_blocked():
@@ -289,7 +289,7 @@ def new_game(request):
     
 def quit(request):
     try:
-        pgs = PlayerGames.objects.select_related('player','game').filter(player__user=request.user,is_current=True)
+        pgs = PlayerGames.objects.select_related('player','game').filter(player__user__pk=request.user.pk,is_current=True)
         pgs.update(is_current=False)
         for el in pgs:
             if el.game.players_to_start == 0:
