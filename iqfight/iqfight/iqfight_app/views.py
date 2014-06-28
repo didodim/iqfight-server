@@ -299,11 +299,8 @@ def quit(request):
                 el.game.num_of_players = n-1
                 el.game.save()
             else:
-                if el.game.num_of_players > 1:
-                    el.game.num_of_players -= 1
-                    el.game.save()
-                else:
-                    el.game.delete()
+                el.game.num_of_players -= 1
+                el.game.save()
         return get_response(request,{'status':'ok','error_message':''}) 
     except:
         logger.error(traceback.format_exc())

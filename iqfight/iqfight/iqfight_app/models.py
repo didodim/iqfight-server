@@ -140,7 +140,7 @@ class PlayerGames(models.Model):
         if save:
             self.save()
     def is_blocked(self):
-        return self.block_question and self.game.current_question and self.block_question == self.game.current_question
+        return self.block_question != None and self.game.current_question != None and self.block_question == self.game.current_question
     
     def __unicode__(self):
         return unicode(self.player) +u' played '+ unicode(self.game) 
