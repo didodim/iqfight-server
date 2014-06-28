@@ -8,7 +8,7 @@ admin.autodiscover()
 
 urlpatterns = patterns('',
     # Examples:
-    # url(r'^$', 'iqfight.views.home', name='home'),
+    url(r'^$', index),
     # url(r'^blog/', include('blog.urls')),
     url(r'^login/*',login_func),
     url(r'^register/*',register),

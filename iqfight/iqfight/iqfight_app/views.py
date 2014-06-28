@@ -41,6 +41,8 @@ def is_logged(request):
         return get_response(request,
                             {'username':'','status':'error',"error_message":'Server Error'}
                             )
+def index(request):
+    return HttpResponse(Answer.objects.get(pk=1).picture_url)
 
 def login_func(request):
     try:
@@ -48,8 +50,6 @@ def login_func(request):
             data = request.GET
         else:
             data = request.POST
-#        if request.method == 'GET':
-#            return is_logged(request)
         user = authenticate(username=data['username'], password=data['password'])
         
         if user:
@@ -172,7 +172,7 @@ def play(request):
         pg = PlayerGames.objects.select_related('game','player').get(player__user=user,is_current=True)
         game = pg.game
         pgs = PlayerGames.objects.select_related().filter(game=game,is_current=True)
-        res = {'status':'ok','error_message':''}
+        res = {'is_blocked':pg.is_blocked(),'status':'ok','error_message':''}
         const = GameConstants.objects.all()[0]
         if not game.question_started:
             game.question_started = datetime.datetime.now() + datetime.timedelta(milliseconds=500)
@@ -205,25 +205,24 @@ def play(request):
         if question:
             res['question'] = {'question': question.question, 
                                'explanation':question.explanation, 
-                               'picture': '', 
+                               'picture': question.picture_url,
+                               'number': game.current_question, 
                                'source': question.source}
-            if question.picture:
-                res['question']['picture'] = question.picture.url
-            
             res['answers'] = []
             for el in question.answers.all().order_by('order'):
-                temp = {'answer':el.answer,'id':el.pk,'picture':''}
-                if el.picture:
-                    temp['picture'] = el.picture.url
+                temp = {'answer':el.answer,'id':el.pk,'picture':el.picture_url}
                 res['answers'] += [temp]
         else:
             res['question'] = {}
             res['answers'] = []
             game.is_active = False
             pgs.update(is_current=False,ended=datetime.datetime.now())
+            res['error_message'] = 'Game over'
+            res['status'] = 'error'
+            game.set_winner(pgs,False)
             game.save()
         res['users'] = []
-        for el in pgs.exclude(pk=pg.pk):
+        for el in pgs:
             res['users'] += [{"name": el.player.user.username,"points":el.points}]
         return get_response(request,res)
     except PlayerGames.DoesNotExist:
@@ -247,6 +246,8 @@ def answer(request):
         pg = PlayerGames.objects.select_related('game','player').get(player__user=user,is_current=True)
         game = pg.game
         res = {'status':'ok','error_message':'','correct':False,'already_answered':False,'answered_user':''}
+        if pg.is_blocked():
+            return get_response(request,res)
         if game.answered:
             res['answered_user'] =  game.answered.user.username
             res['already_answered'] = True
@@ -259,6 +260,8 @@ def answer(request):
                 game.answered = pg.player
                 game.save()
                 pg.got_points(1)
+            else:
+                pg.block(game.current_question)
         return get_response(request,res)
     except PlayerGames.DoesNotExists:
         logger.error(traceback.format_exc())
@@ -304,5 +307,18 @@ def quit(request):
         logger.error(traceback.format_exc())
         return get_response(request,{'status':'error','error_message':'Server Error'})
 
-            
+@login_required(login_url='/login')            
+def statistics(request):
+    data = request.GET
+    limit = data['limit']
+    offset = data['offset']
+    if data.has_key('game'):
+        return statistics_game(limit,offset,data['game'])
+    else:
+        return statistics_all(limit,offset)
+    
+def statistics_all(limit,offset):
+    players = Player.objects.select_related().order_by('-points')[offset:offset+limit] 
+    
+    
     

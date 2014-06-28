@@ -13,6 +13,14 @@ class Question(models.Model):
     explanation = models.TextField(default="")
     picture     = models.ImageField(upload_to='pictures',null=True)
     source      = models.CharField(max_length=200,default='')
+    @property
+    def picture_url(self):
+        if self.picture and hasattr(self.picture, 'url'):
+            try:
+                return self.picture.url
+            except ValueError:
+                return ''
+        return ''
     
 class Answer(models.Model):
     type        = models.CharField(max_length=20)
@@ -21,6 +29,14 @@ class Answer(models.Model):
     picture     = models.ImageField(upload_to='pictures',null=True)
     is_correct  = models.BooleanField(default=False)
     question    = models.ForeignKey(Question,related_name='answers')
+    @property
+    def picture_url(self):
+        if self.picture and hasattr(self.picture, 'url'):
+            try:
+                return self.picture.url
+            except ValueError:
+                return ''
+        return ''
     
 class Game(models.Model):
     name        = models.CharField(max_length=50)
@@ -33,6 +49,12 @@ class Game(models.Model):
     num_of_players  = models.IntegerField(default=0)
     max_num_of_players = models.IntegerField(default=3)
     players_seen_answered = models.SmallIntegerField(default=0)
+    winner = models.ForeignKey("Player",null=True)
+    def set_winner(self,pg=None,save=True):
+        if not pgs:
+            pg = self.players.select_related().all().order_by("-points")[0]
+        self.winner = pg.player
+        
     def init(self,save=False):
         self.is_active = True
         self.question_started = None
@@ -92,6 +114,7 @@ class PlayerGames(models.Model):
     started = models.DateField()
     ended   = models.DateField(null=True)
     seen_answered = models.BooleanField(default=False)
+    block_question = models.SmallIntegerField(null=True)
     def save(self,*args,**kwargs):
         if not self.started:
             self.started = datetime.datetime.now()
@@ -101,6 +124,13 @@ class PlayerGames(models.Model):
         self.save()
         self.player.points += points
         self.player.save()
+    def block(self,save=True):
+        self.block_question = self.game.current_question
+        if save:
+            self.save()
+    def is_blocked(self):
+        return self.block_question and self.game.current_question and self.block_question == self.game.current_question
+        
 
         
     
