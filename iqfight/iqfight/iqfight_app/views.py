@@ -265,7 +265,7 @@ def answer(request):
             else:
                 pg.block(game.current_question)
         return get_response(request,res)
-    except PlayerGames.DoesNotExists:
+    except PlayerGames.DoesNotExist:
         logger.error(traceback.format_exc())
         return get_response(request,
                             {'status':'error','error_message':'Game over','correct':False,'already_answered':False,'answered_user':''}
