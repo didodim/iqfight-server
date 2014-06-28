@@ -106,7 +106,7 @@ def register(request):
                             {'username':'','status':'error',"error_message":'Server Error'}
                             )
     
-@login_required(login_url='/login')  
+@login_required(login_url='/login-fail')  
 def get_games(request):
     try:
         games = get_games_list()
@@ -117,7 +117,7 @@ def get_games(request):
         return get_response(request,{'games':[],'refresh_interval':1000,'status':'error','error_message':'Server Error'})
     
 
-@login_required(login_url='/login')
+@login_required(login_url='/login-fail')
 def open_game(request): 
     try:  
         id = request.GET['id']
@@ -144,7 +144,7 @@ def open_game(request):
         return get_response(request, {'players_to_start': -1,
                                   'status':'error','error_message':'Server Error'}) 
     
-@login_required(login_url='/login')
+@login_required(login_url='/login-fail')
 def refresh_game(request):
     try:  
         id = request.GET['id']
@@ -167,7 +167,7 @@ def refresh_game(request):
         return get_response(request, {'players_to_start': -1,'users':[],
                                       'status':'error','error_message':'Server Error'}) 
 
-@login_required(login_url='/login')
+@login_required(login_url='/login-fail')
 def play(request):
     try:
         user = request.user
@@ -239,7 +239,7 @@ def play(request):
                              'question':'','refresh_interval':1000}
                             )
     
-@login_required(login_url='/login')
+@login_required(login_url='/login-fail')
 def answer(request):
     try:
         data = request.GET
@@ -290,7 +290,6 @@ def new_game(request):
 def quit(request):
     try:
         pgs = PlayerGames.objects.select_related('player','game').filter(player__user__pk=request.user.pk,is_current=True)
-        pgs.update(is_current=False)
         for el in pgs:
             if el.game.players_to_start == 0:
                 n = el.game.num_of_players
@@ -300,12 +299,13 @@ def quit(request):
             else:
                 el.game.num_of_players -= 1
                 el.game.save()
+        pgs.update(is_current=False)
         return get_response(request,{'status':'ok','error_message':''}) 
     except:
         logger.error(traceback.format_exc())
         return get_response(request,{'status':'error','error_message':'Server Error'})
 
-@login_required(login_url='/login')            
+@login_required(login_url='/login-fail')            
 def statistics(request):
     try:
         data = request.GET
@@ -336,4 +336,7 @@ def statistics_game(limit,offset,game_id):
         lst += [{'usernam':el.player.user.username,'scores':el.points}]
     res['users'] = lst
     return get_response(request,res) 
+
+def login_fail(request):
+    return get_response(request,{'status':'error',"error_message":"Please log in"})
     
