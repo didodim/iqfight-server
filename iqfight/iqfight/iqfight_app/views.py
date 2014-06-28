@@ -293,7 +293,7 @@ def quit(request):
         for el in pgs:
             if el.game.players_to_start == 0:
                 n = el.game.num_of_players
-                el.game.init()
+#                el.game.init()
                 el.game.num_of_players = n-1
                 el.game.save()
             else:
