@@ -174,7 +174,7 @@ def play(request):
         pg = PlayerGames.objects.select_related('game','player').get(player__user=user,is_current=True)
         game = pg.game
         pgs = PlayerGames.objects.select_related().filter(game=game,is_current=True)
-        res = {'is_blocked':pg.is_blocked(),'status':'ok','error_message':''}
+        res = {'is_blocked':pg.is_blocked(),'status':'ok','error_message':'','game_over':False}
         const = GameConstants.objects.all()[0]
         if not game.question_started:
             game.question_started = datetime.datetime.now() + datetime.timedelta(milliseconds=500)
@@ -219,8 +219,7 @@ def play(request):
             res['answers'] = []
             game.is_active = False
             pgs.update(is_current=False,ended=datetime.datetime.now())
-            res['error_message'] = 'Game over'
-            res['status'] = 'error'
+            res['game_over'] = True
             game.set_winner(pgs,False)
             game.save()
         res['users'] = []
@@ -230,13 +229,13 @@ def play(request):
     except PlayerGames.DoesNotExist:
         logger.error(traceback.format_exc())
         return get_response(request,
-                            {'status':'error','error_message':'Game over','users':[],'remaing_time':-1,'answered_user':'','answers':[],
+                            {'status':'ok','error_message':'','users':[],'remaing_time':-1,'answered_user':'','answers':[],'game_over':True,
                              'question':'','refresh_interval':1000}
                             )
     except:
         logger.error(traceback.format_exc())
         return get_response(request,
-                            {'status':'error','error_message':'Server Error','users':[],'remaing_time':-1,'answered_user':'','answers':[],
+                            {'status':'error','error_message':'Server Error','users':[],'remaing_time':-1,'answered_user':'','answers':[],'game_over':False,
                              'question':'','refresh_interval':1000}
                             )
     
