@@ -77,12 +77,16 @@ class Game(models.Model):
     def players_to_start(self):
         return self.max_num_of_players - self.num_of_players
     def save(self,*args,**kwargs):
+        constants = GameConstants.objects.all()[0]
         if not self.questions:
-            constants = GameConstants.objects.all()[0]
             lst = Question.objects.order_by('?').values_list("pk",flat=True)[:constants.questions_in_game]
             self.questions = str(lst).lower().replace('l','')[1:-1]
         if not self.created:
             self.created = datetime.datetime.now()
+        if self.max_num_of_players < 0:
+            self.max_num_of_players =  3
+        if self.num_of_players < 0:
+            self.num_of_players = 0
         super(self.__class__,self).save(*args,**kwargs)
     def get_current_question(self):
         ids = self.get_questions()
@@ -122,8 +126,8 @@ class PlayerGames(models.Model):
     game    = models.ForeignKey(Game,related_name="players")
     points  = models.IntegerField(default=0)
     is_current = models.BooleanField(default=True)
-    started = models.DateField()
-    ended   = models.DateField(null=True)
+    started = models.DateTimeField()
+    ended   = models.DateTimeField(null=True)
     seen_answered = models.BooleanField(default=False)
     block_question = models.SmallIntegerField(null=True)
     def save(self,*args,**kwargs):

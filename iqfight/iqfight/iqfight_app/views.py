@@ -289,7 +289,7 @@ def new_game(request):
     
 def quit(request):
     try:
-        pgs = PlayerGames.objects.select_related('player','game').filter(player__user=request.user)
+        pgs = PlayerGames.objects.select_related('player','game').filter(player__user=request.user,is_current=True)
         pgs.update(is_current=False)
         for el in pgs:
             if el.game.players_to_start == 0:
