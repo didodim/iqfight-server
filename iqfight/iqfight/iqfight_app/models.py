@@ -27,7 +27,7 @@ class Question(models.Model):
 class Answer(models.Model):
     type        = models.CharField(max_length=20)
     order       = models.SmallIntegerField(default=0)
-    answer      = models.CharField(max_length=200,default="")
+    answer      = models.TextField(default="")
     picture     = models.ImageField(upload_to='pictures',null=True)
     is_correct  = models.BooleanField(default=False)
     question    = models.ForeignKey(Question,related_name='answers')
