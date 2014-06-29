@@ -17,7 +17,7 @@ def login_required_custom(callback):
     def dec(function):
         def decorator(request, *args, **kwargs):
             if request.user.is_authenticated():
-                return view_func(request, *args, **kwargs)
+                return function(request, *args, **kwargs)
             else:
                 return callback(request, *args, **kwargs)
         return decorator
@@ -308,14 +308,9 @@ def quit(request):
     try:
         pgs = PlayerGames.objects.select_related('player','game').filter(player__user__pk=request.user.pk,is_current=True)
         for el in pgs:
-            if el.game.players_to_start == 0:
-                n = el.game.num_of_players
-#                el.game.init()
-                el.game.num_of_players = n-1
-                el.game.save()
-            else:
-                el.game.num_of_players -= 1
-                el.game.save()
+            el.game.num_of_players -= 1
+            el.game.max_num_of_players -= 1
+            el.game.save()
         pgs.update(is_current=False,ended=datetime.datetime.now())
         return get_response(request,{'status':'ok','error_message':''}) 
     except:
