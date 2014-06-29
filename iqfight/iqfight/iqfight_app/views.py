@@ -204,6 +204,9 @@ def play(request):
         else:
             question = game.get_current_question()
         res['refresh_interval'] = const.time_for_answer
+        res['users'] = []
+        for el in pgs:
+            res['users'] += [{"name": el.player.user.username,"points":el.points}]
         if question:
             res['question'] = {'question': question.question, 
                                'explanation':question.explanation, 
@@ -218,25 +221,22 @@ def play(request):
             res['question'] = {}
             res['answers'] = []
             game.is_active = False
-            pgs.update(is_current=False,ended=datetime.datetime.now())
             res['game_over'] = True
             game.set_winner(pgs,False)
             game.save()
-        res['users'] = []
-        for el in pgs:
-            res['users'] += [{"name": el.player.user.username,"points":el.points}]
+            pgs.update(is_current=False,ended=datetime.datetime.now())
         return get_response(request,res)
     except PlayerGames.DoesNotExist:
         logger.error(traceback.format_exc())
         return get_response(request,
                             {'status':'ok','error_message':'','users':[],'remaing_time':-1,'answered_user':'','answers':[],'game_over':True,
-                             'question':'','refresh_interval':1000}
+                             'question':{},'refresh_interval':1000}
                             )
     except:
         logger.error(traceback.format_exc())
         return get_response(request,
                             {'status':'error','error_message':'Server Error','users':[],'remaing_time':-1,'answered_user':'','answers':[],'game_over':False,
-                             'question':'','refresh_interval':1000}
+                             'question':{},'refresh_interval':1000}
                             )
     
 @login_required(login_url='/login-fail')
