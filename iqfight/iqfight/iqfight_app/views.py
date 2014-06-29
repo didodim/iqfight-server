@@ -194,11 +194,6 @@ def play(request):
         if not game.question_started:
             game.question_started = datetime.datetime.now() + datetime.timedelta(milliseconds=500)
             game.save()
-        delta = datetime.datetime.now() - game.question_started + datetime.timedelta(milliseconds=200)
-        ms = delta.days*24*60*60*1000 + delta.seconds*1000 + delta.microseconds/1000
-        res['remaing_time'] = const.time_for_answer - ms
-        if res['remaing_time'] <= 0:
-            res['remaing_time'] = 0
         res['answered_user'] = ''
         question = None
         if game.answered:
@@ -242,6 +237,7 @@ def play(request):
             game.set_winner(pgs,False)
             game.save()
             pgs.update(is_current=False,ended=datetime.datetime.now())
+        res['remaining_time'] = game.get_remaining_time(const)
         return get_response(request,res)
     except PlayerGames.DoesNotExist:
         logger.error(traceback.format_exc())
@@ -298,6 +294,8 @@ def new_game(request):
         else:
             data = request.POST
         game = Game(name=data['name'])
+        if data.has_key('players'):
+            game.max_num_of_players = data['players']
         game.save()
         return get_response(request,{'name':game.name,"id":game.pk,"status":'ok','error_message':''})
     except:

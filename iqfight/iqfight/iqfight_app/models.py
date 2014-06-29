@@ -53,6 +53,15 @@ class Game(models.Model):
     max_num_of_players = models.IntegerField(default=3)
     players_seen_answered = models.SmallIntegerField(default=0)
     winner = models.ForeignKey("Player",null=True,related_name="game_wins")
+    def get_remaining_time(self,const=None):
+        if not const:
+            const = GameConstants.objects.all()[0]
+        delta = datetime.datetime.now() - self.question_started + datetime.timedelta(milliseconds=200)
+        ms = delta.days*24*60*60*1000 + delta.seconds*1000 + delta.microseconds/1000
+        rem = const.time_for_answer - ms
+        if rem < 0:
+            rem = 0
+        return rem
     def set_winner(self,pgs=None,save=True):
         if not pgs:
             pgs = self.players.select_related().all()
