@@ -53,9 +53,10 @@ class Game(models.Model):
     max_num_of_players = models.IntegerField(default=3)
     players_seen_answered = models.SmallIntegerField(default=0)
     winner = models.ForeignKey("Player",null=True,related_name="game_wins")
-    def set_winner(self,pg=None,save=True):
-        if not pg:
-            pg = self.players.select_related().all().order_by("-points")[0]
+    def set_winner(self,pgs=None,save=True):
+        if not pgs:
+            pgs = self.players.select_related().all()
+        pgs.order_by("-points")[0]
         self.winner = pg.player
         pg.player.wins += 1
         pg.player.save()
