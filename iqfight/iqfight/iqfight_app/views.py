@@ -11,6 +11,7 @@ from django.http import *
 from django.db.utils import IntegrityError
 from django.utils import log
 from functools import wraps
+from django.db.models import F
 logger = log.getLogger(__name__)
 
 def login_required_custom(callback):
@@ -32,7 +33,7 @@ def get_response(request,d):
 
 def get_games_list():
     lst = []
-    games = Game.objects.filter(is_active=True)
+    games = Game.objects.filter(is_active=True,max_num_of_players__gt=F('num_of_players'))
     for el in games:
         lst += [{'id':el.pk,'name':el.name,'players_to_start':el.players_to_start}]
     return lst
@@ -294,7 +295,7 @@ def new_game(request):
         else:
             data = request.POST
         game = Game(name=data['name'])
-        if data.has_key('players'):
+        if data.has_key('players') and data['players']:
             game.max_num_of_players = data['players']
         game.save()
         return get_response(request,{'name':game.name,"id":game.pk,"status":'ok','error_message':''})
