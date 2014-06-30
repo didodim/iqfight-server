@@ -31,9 +31,17 @@ def login_fail(request):
 def get_response(request,d):
     return HttpResponse(content=json.dumps(obj=d, encoding="UTF-8"), content_type='application/json')
 
-def get_games_list():
-    lst = []
-    games = Game.objects.filter(is_active=True,max_num_of_players__gt=F('num_of_players'))
+def get_games_list(player=None):
+    
+    if not player:
+        games = Game.objects.filter(is_active=True,max_num_of_players__gt=F('num_of_players'))
+    else:
+        try:
+            pg = PlayerGames.objects.select_related('game','player').get(player=player,is_current=True)
+            games = [pg.game]
+        except PlayerGames.DoesNotExist:
+            games = Game.objects.filter(is_active=True,max_num_of_players__gt=F('num_of_players'))
+    lst = []       
     for el in games:
         lst += [{'id':el.pk,'name':el.name,'players_to_start':el.players_to_start}]
     return lst
@@ -125,7 +133,8 @@ def register(request):
 @login_required_custom(login_fail) 
 def get_games(request):
     try:
-        games = get_games_list()
+        player  = Player.objects.get(user=request.user)
+        games = get_games_list(player)
         const = GameConstants.objects.all()[0]
         return get_response(request,{'games':games,'refresh_interval':const.refresh_interval_game,'status':'ok','error_message':''})
     except:
@@ -138,21 +147,21 @@ def open_game(request):
     try:  
         id = request.GET['id']
         game = Game.objects.get(pk=id)
-        
-        if game.players_to_start < 1:
-            return get_response(request,{'players_to_start': -1, 'status':'error','error_message':'The game is full'})
         user = request.user
         player  = Player.objects.get(user=user)
-        if PlayerGames.objects.filter(player=player,is_current=True).exclude(game=game):
-            return get_response(request, {'players_to_start': -1,
-                                  'status':'error','error_message':'You are playing another game!!!'})
-        pg,created = PlayerGames.objects.get_or_create(player=player,game=game,is_current=True)
-        if created:
+        try:
+            pg = PlayerGames.objects.get(player=player,is_current=True)
+            if pg.game != game:
+                return get_response(request, {'players_to_start': -1,
+                                      'status':'error','error_message':'You are playing another game!!!'})
+        except PlayerGames.DoesNotExist:
+            pg = PlayerGames(player=player,game=game,is_current=True)
+            pg.save()
             game.num_of_players += 1
             game.save()
             pg.player.played_games += 1
             pg.player.save()
-        
+            
         return get_response(request, {'players_to_start': game.max_num_of_players - game.num_of_players,
                                   'status':'ok','error_message':''})
     except:
