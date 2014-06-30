@@ -97,6 +97,8 @@ class Game(models.Model):
             self.max_num_of_players =  3
         if self.num_of_players < 0:
             self.num_of_players = 0
+        if self.max_num_of_players == 0:
+            self.is_active = False
         super(self.__class__,self).save(*args,**kwargs)
     def get_current_question(self):
         ids = self.get_questions()
