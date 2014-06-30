@@ -198,7 +198,7 @@ def play(request):
         res['answered_user'] = ''
         question = None
         res['remaining_time'] = game.get_remaining_time(const)
-        if game.answered or res['remaing_time'] <= 0:
+        if game.answered or res['remaining_time'] <= 0:
             waiting = game.get_noquestion_waiting()
             if waiting > 0:
                 if game.answered:
