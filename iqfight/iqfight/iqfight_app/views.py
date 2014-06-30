@@ -197,23 +197,17 @@ def play(request):
             game.save()
         res['answered_user'] = ''
         question = None
-        if game.answered:
-            res['answered_user'] =  game.answered.user.username
-            if game.players_seen_answered == game.max_num_of_players:
-                game.players_seen_answered = 0
-                pgs.update(seen_answered=False)
-                question = game.next_question()
-            elif not pg.seen_answered:
-                game.players_seen_answered += 1
-                game.save()
-                pg.seen_answered = True
-                pg.save()
+        res['remaining_time'] = game.get_remaining_time(const)
+        if game.answered or res['remaing_time'] <= 0:
+            waiting = game.get_noquestion_waiting()
+            if waiting > 0:
+                if game.answered:
+                    res['answered_user'] =  game.answered.user.username
+                else: 
+                    res['answered_user'] =  'NOBODY'
                 question = game.get_current_question()
             else:
-                question = game.get_current_question()
-        elif res['remaing_time'] <= 0:
-            question = game.next_question()
-            res['answered_user'] =  'NOBODY'
+                question = game.next_question()
         else:
             question = game.get_current_question()
         res['refresh_interval'] = const.time_for_answer
@@ -238,7 +232,7 @@ def play(request):
             game.set_winner(pgs,False)
             game.save()
             pgs.update(is_current=False,ended=datetime.datetime.now())
-        res['remaining_time'] = game.get_remaining_time(const)
+        
         return get_response(request,res)
     except PlayerGames.DoesNotExist:
         logger.error(traceback.format_exc())

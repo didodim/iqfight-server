@@ -51,7 +51,7 @@ class Game(models.Model):
     answered    = models.ForeignKey("Player",null=True)
     num_of_players  = models.IntegerField(default=0)
     max_num_of_players = models.IntegerField(default=3)
-    players_seen_answered = models.SmallIntegerField(default=0)
+    question_end = models.DateTimeField(null=True)
     winner = models.ForeignKey("Player",null=True,related_name="game_wins")
     def get_remaining_time(self,const=None):
         if not const:
@@ -78,7 +78,7 @@ class Game(models.Model):
         self.current_question = 0
         self.answered = None
         self.num_of_players = 0
-        self.players_seen_answered = 0
+        self.question_end = None
         if save:
             self.save()
     def __unicode__(self):
@@ -111,10 +111,22 @@ class Game(models.Model):
     def get_questions(self):
         return self.questions.split(',')
     
-    def next_question(self,answered_player=None):
+    def get_noquestion_waiting(self):
+        if not self.question_end:
+            self.question_end = datetime.datetime.now()
+            self.save()
+        delta = datetime.datetime.now() - self.question_end + datetime.timedelta(milliseconds=200)
+        ms = delta.days*24*60*60*1000 + delta.seconds*1000 + delta.microseconds/1000
+        rem = 6000 - ms
+        if rem < 0:
+            rem = 0
+        return rem
+    
+    def next_question(self):
         ids = self.get_questions()
         self.current_question += 1
-        self.answered = answered_player
+        self.answered = None
+        self.question_end = None
         if len(ids) <= self.current_question:
             question =  None
             self.is_active = False
@@ -140,7 +152,6 @@ class PlayerGames(models.Model):
     is_current = models.BooleanField(default=True)
     started = models.DateTimeField()
     ended   = models.DateTimeField(null=True)
-    seen_answered = models.BooleanField(default=False)
     block_question = models.SmallIntegerField(null=True)
     def save(self,*args,**kwargs):
         if not self.started:
