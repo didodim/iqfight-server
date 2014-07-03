@@ -65,10 +65,11 @@ class Game(models.Model):
     def set_winner(self,pgs=None,save=True):
         if not pgs:
             pgs = self.players.select_related().all()
-        pg = pgs.order_by("-points")[0]
-        self.winner = pg.player
-        pg.player.wins += 1
-        pg.player.save()
+        pg = pgs.order_by("-points")
+        self.winner = pg[0].player
+        pg[0].player.wins += 1
+        pg[0].got_points(5)
+        pg[1].got_points(3)
         if save:
             self.save()
             
